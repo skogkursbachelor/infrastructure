@@ -1,0 +1,12 @@
+services:
+  ncwms:
+    build:
+      context: ./ncwms
+      dockerfile: Dockerfile
+    ports:
+      - "3030:3030"
+    post_start:
+      - command: >
+          sh -c 'until curl --digest -u ncwms:changeme -d "id=1&title=copernicus_historical&location=/opt/tomcat/copernicus/*.nc" -X POST http://127.0.0.1:3030/ncWMS2/admin/addDataset;
+          do echo "Waiting for ncWMS to be ready..."; sleep 5; done'
+        user: root
