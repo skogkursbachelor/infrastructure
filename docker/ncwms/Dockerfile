@@ -8,9 +8,6 @@ RUN apt-get update && apt-get install -y \
     unzip && \
     apt-get clean
 
-# To resolve ERROR uk.ac.rdg.resc.edal.catalogue.DataCatalogue - Problem adding features to cache
-ENV JAVA_OPTS="--add-opens java.base/java.util.concurrent.locks=ALL-UNNAMED"
-
 # Change Tomcat port to 3030
 RUN sed -i 's/port="8080"/port="3030"/' /usr/local/tomcat/conf/server.xml
 EXPOSE 3030
