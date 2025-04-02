@@ -1,18 +1,34 @@
 services:
-  ncwms:
+  server:
+    image: ghcr.io/erikbjo/server:latest
+    container_name: server
     build:
-      context: ./ncwms
+      context: https://github.com/skogkursbachelor/server.git
       dockerfile: Dockerfile
     ports:
-      - "3030:3030"
-    mem_limit: 4g
-    mem_reservation: 2g
+      - "8080:8080"
     environment:
-      - JAVA_OPTS=-Xms2g -Xmx3g
-    post_start:
-      # TODO: username and password should be set as environment variables
-      - command: >
-          sh -c 'until curl --digest -u ncwms:changeme -d "id=1&title=copernicus_historical&location=/usr/local/tomcat/copernicus/*.nc" -X POST http://127.0.0.1:3030/ncWMS2/admin/addDataset;
-          do echo "Waiting for ncWMS to be ready..."; sleep 5; done;
-          curl --digest -u ncwms:changeme -H "Cache-Control: max-age=0" -d "dataset.1.id=1&dataset.1.title=copernicus_historical&dataset.1.location=%2Fopt%2Ftomcat%2Fcopernicus%2F*.nc&dataset.1.moreinfo=&dataset.1.copyright=&dataset.1.updateinterval=-1&dataset.1.queryable=on&dataset.1.reader=&dataset.new0.id=&dataset.new0.title=&dataset.new0.location=&dataset.new0.moreinfo=&dataset.new0.copyright=&dataset.new0.updateinterval=-1&dataset.new0.queryable=on&dataset.new0.reader=&dataset.new1.id=&dataset.new1.title=&dataset.new1.location=&dataset.new1.moreinfo=&dataset.new1.copyright=&dataset.new1.updateinterval=-1&dataset.new1.queryable=on&dataset.new1.reader=&dataset.new2.id=&dataset.new2.title=&dataset.new2.location=&dataset.new2.moreinfo=&dataset.new2.copyright=&dataset.new2.updateinterval=-1&dataset.new2.queryable=on&dataset.new2.reader=&dynamicService.new0.alias=&dynamicService.new0.servicePath=&dynamicService.new0.datasetIdMatch=.*&dynamicService.new0.moreinfo=&dynamicService.new0.copyright=&dynamicService.new0.queryable=on&dynamicService.new0.reader=&dynamicService.new1.alias=&dynamicService.new1.servicePath=&dynamicService.new1.datasetIdMatch=.*&dynamicService.new1.moreinfo=&dynamicService.new1.copyright=&dynamicService.new1.queryable=on&dynamicService.new1.reader=&dynamicService.new2.alias=&dynamicService.new2.servicePath=&dynamicService.new2.datasetIdMatch=.*&dynamicService.new2.moreinfo=&dynamicService.new2.copyright=&dynamicService.new2.queryable=on&dynamicService.new2.reader=&dynamicCache.nDatasets=10&dynamicCache.elementLifetimeMinutes=0.0&cache.inMemorySizeMB=0&cache.elementLifetimeMinutes=0.0&server.title=ncWMS+Server&server.abstract=&server.keywords=&server.url=&server.maximagewidth=2048&server.maximageheight=2048&server.allowfeatureinfo=on&server.allowglobalcapabilities=on&contact.name=&contact.org=&contact.tel=&contact.email=&submit2=Save+configuration" -X POST http://127.0.0.1:3030/ncWMS2/admin/updateConfig'
-        user: root
+      - ENV=production
+    restart: always
+    networks:
+      - app-network
+
+  website:
+    image: ghcr.io/erikbjo/website:latest
+    container_name: website
+    build:
+      context: https://github.com/skogkursbachelor/website.git
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - server
+    restart: always
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
